@@ -215,6 +215,21 @@ pub enum SnapshotSubcommands {
         #[structopt(short, long, default_value = ".")]
         output: String,
     },
+    /// Snapshot the original minters of NFTs by candy machine id or update authority
+    #[structopt(name = "minters")]
+    Minters {
+        /// Candy Machine ID to filter accounts by
+        #[structopt(short, long)]
+        candy_machine_id: Option<String>,
+
+        /// Update authority to filter accounts by.
+        #[structopt(short, long)]
+        update_authority: Option<String>,
+
+        /// Path to directory to save output file
+        #[structopt(short, long, default_value = ".")]
+        output: String,
+    },
 }
 
 #[derive(Debug, StructOpt)]

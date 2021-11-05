@@ -5,7 +5,7 @@ use crate::decode::decode_metadata;
 use crate::mint::{mint_list, mint_one};
 use crate::opt::*;
 use crate::sign::{sign_all, sign_one};
-use crate::snapshot::{snapshot_cm_accounts, snapshot_holders, snapshot_mints};
+use crate::snapshot::{snapshot_cm_accounts, snapshot_holders, snapshot_minters, snapshot_mints};
 use crate::update_metadata::*;
 
 pub fn process_decode(client: &RpcClient, commands: DecodeSubcommands) -> Result<()> {
@@ -91,5 +91,10 @@ pub fn process_snapshot(client: &RpcClient, commands: SnapshotSubcommands) -> Re
             update_authority,
             output,
         } => snapshot_mints(&client, candy_machine_id, update_authority, output),
+        SnapshotSubcommands::Minters {
+            candy_machine_id,
+            update_authority,
+            output,
+        } => snapshot_minters(&client, &candy_machine_id, &update_authority, &output),
     }
 }

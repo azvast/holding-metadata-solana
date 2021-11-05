@@ -16,7 +16,9 @@ use solana_sdk::{
     account::Account,
     commitment_config::{CommitmentConfig, CommitmentLevel},
     pubkey::Pubkey,
+    signature::Signature,
 };
+use solana_transaction_status::{EncodedConfirmedTransaction, UiTransactionEncoding};
 use spl_token::ID as TOKEN_PROGRAM_ID;
 use std::{fs::File, str::FromStr};
 
@@ -129,6 +131,8 @@ pub fn snapshot_holders(
             )?;
             let amount = parse_token_amount(&data)?;
 
+            println!("{:?}", data);
+
             // Only include current holder of the NFT.
             if amount == 1 {
                 let owner_wallet = parse_owner(&data)?;
@@ -156,6 +160,37 @@ pub fn snapshot_holders(
 
     let mut file = File::create(format!("{}/{}_holders.json", output, prefix))?;
     serde_json::to_writer(&mut file, &nft_holders)?;
+
+    Ok(())
+}
+
+pub fn snapshot_minters(
+    client: &RpcClient,
+    update_authority: &Option<String>,
+    candy_machine_id: &Option<String>,
+    output: &String,
+) -> Result<()> {
+    let signatures = if let Some(update_authority) = update_authority {
+        client.get_signatures_for_address(&Pubkey::from_str(update_authority)?)?
+    } else if let Some(candy_machine_id) = candy_machine_id {
+        client.get_signatures_for_address(&Pubkey::from_str(candy_machine_id)?)?
+    } else {
+        return Err(anyhow!(
+            "Must specify either --update-authority or --candy-machine-id"
+        ));
+    };
+
+    let signature = Signature::from_str(
+        "3W7hKq4D6S78AWHKD29kHvfzdXLuNy52F6MJSQBAfUbGwxq6gnZA2pApkxAxosvDSiZKfGVSdRc2cmkrt1TM2JVV",
+    )?;
+
+    let transaction = client.get_transaction(&signature, UiTransactionEncoding::Base64)?;
+
+    // get instructions
+
+    // println!("{:?}", transaction);
+
+    parse_instructions(transaction)?;
 
     Ok(())
 }
@@ -339,4 +374,10 @@ fn parse_owner(data: &ParsedAccount) -> Result<String> {
         .ok_or(anyhow!("Invalid owner amount!"))?
         .to_string();
     Ok(owner)
+}
+
+fn parse_instructions(transaction: EncodedConfirmedTransaction) -> Result<()> {
+    let inner_instructions = transaction.transaction.meta;
+    println!("{:?}", inner_instructions);
+    Ok(())
 }
